@@ -27,23 +27,121 @@ storico continua a usare il nome utente come richiesto dalla traccia.
 
 ```mermaid
 classDiagram
-    Program --> ApplicazioneNegozio
+    direction TB
 
+    namespace Avvio {
+        class Program {
+            +Main()
+        }
+
+        class ApplicazioneNegozio {
+            -CatalogoProdotti catalogoProdotti
+            -CarrelloUtente carrelloUtente
+            -StoricoAcquisti storicoAcquisti
+            -ServizioNegozio servizioNegozio
+            +Avvia()
+            -GestisciMenuUtente()
+            -GestisciMenuAmministratore()
+        }
+    }
+
+    namespace Servizi {
+        class ServizioNegozio {
+            +AggiungiProdottoAlCarrello(string codiceProdotto, int quantita) bool
+            +ConfermaAcquisto(Utente utente) Acquisto
+            +CreaReportProdotti() List~ReportProdotto~
+            +StampaAcquisto(Acquisto acquisto)
+            +StampaReportProdotti()
+        }
+    }
+
+    namespace Gestori {
+        class CatalogoProdotti
+        class CarrelloUtente
+        class StoricoAcquisti
+    }
+
+    namespace Modelli {
+        class Utente {
+            +string Nome
+            +Utente(string nome)
+        }
+
+        class Prodotto {
+            +string CodiceProdotto
+            +string Nome
+            +decimal Prezzo
+            +int QuantitaDisponibile
+            +int QuantitaIniziale
+            +CambiaPrezzo(decimal nuovoPrezzo)
+            +CambiaQuantita(int variazioneQuantita)
+            +CalcolaQuantitaVenduta() int
+        }
+
+        class ElementoCarrello {
+            +Prodotto ProdottoSelezionato
+            +int QuantitaScelta
+            +decimal PrezzoUnitario
+            +CalcolaTotaleParziale() decimal
+            +CambiaQuantitaScelta(int nuovaQuantita)
+        }
+
+        class Acquisto {
+            +Utente Utente
+            +string NomeUtente
+            +List~ElementoAcquistato~ ProdottiAcquistati
+            +decimal TotaleOrdine
+            +DateTime DataAcquisto
+        }
+
+        class ElementoAcquistato {
+            +string CodiceProdotto
+            +string NomeProdotto
+            +int QuantitaAcquistata
+            +decimal PrezzoUnitario
+            +decimal TotaleParziale
+        }
+
+        class ReportProdotto {
+            +string CodiceProdotto
+            +string NomeProdotto
+            +int QuantitaIniziale
+            +int QuantitaVenduta
+            +int QuantitaDisponibile
+        }
+    }
+
+    namespace Contratti {
+        class IGestioneCatalogo {
+            <<interface>>
+            +AggiungiProdotto(Prodotto prodotto)
+            +EliminaProdotto(string codiceProdotto) bool
+            +CercaProdottoPerCodice(string codiceProdotto) Prodotto
+            +OttieniTuttiIProdotti() List~Prodotto~
+        }
+
+        class IGestioneCarrello {
+            <<interface>>
+            +AggiungiAlCarrello(Prodotto prodotto, int quantita) bool
+            +ModificaQuantitaNelCarrello(string codiceProdotto, int nuovaQuantita) bool
+            +RimuoviDalCarrello(string codiceProdotto) bool
+            +SvuotaCarrello()
+            +CalcolaTotale() decimal
+        }
+
+        class IGestioneAcquisti {
+            <<interface>>
+            +RegistraAcquisto(Acquisto acquisto)
+            +OttieniTuttiGliAcquisti() List~Acquisto~
+            +OttieniAcquistiPerUtente(string nomeUtente) List~Acquisto~
+        }
+    }
+
+    Program --> ApplicazioneNegozio
+    ApplicazioneNegozio --> ServizioNegozio
     ApplicazioneNegozio --> CatalogoProdotti
     ApplicazioneNegozio --> CarrelloUtente
     ApplicazioneNegozio --> StoricoAcquisti
-    ApplicazioneNegozio --> ServizioNegozio
-
-    IGestioneCatalogo <|.. CatalogoProdotti
-    IGestioneCarrello <|.. CarrelloUtente
-    IGestioneAcquisti <|.. StoricoAcquisti
-
-    CatalogoProdotti "1" o-- "*" Prodotto
-    CarrelloUtente "1" o-- "*" ElementoCarrello
-    ElementoCarrello --> Prodotto
-    StoricoAcquisti "1" o-- "*" Acquisto
-    Acquisto --> Utente
-    Acquisto "1" o-- "*" ElementoAcquistato
 
     ServizioNegozio --> CatalogoProdotti
     ServizioNegozio --> CarrelloUtente
@@ -51,99 +149,17 @@ classDiagram
     ServizioNegozio ..> Acquisto
     ServizioNegozio ..> ReportProdotto
 
-    class Program {
-        +Main()
-    }
+    CatalogoProdotti "1" o-- "*" Prodotto
+    CarrelloUtente "1" o-- "*" ElementoCarrello
+    ElementoCarrello --> Prodotto
 
-    class ApplicazioneNegozio {
-        -CatalogoProdotti catalogoProdotti
-        -CarrelloUtente carrelloUtente
-        -StoricoAcquisti storicoAcquisti
-        -ServizioNegozio servizioNegozio
-        +Avvia()
-        -GestisciMenuUtente()
-        -GestisciMenuAmministratore()
-    }
+    StoricoAcquisti "1" o-- "*" Acquisto
+    Acquisto --> Utente
+    Acquisto "1" o-- "*" ElementoAcquistato
 
-    class IGestioneCatalogo {
-        <<interface>>
-        +AggiungiProdotto(Prodotto prodotto)
-        +EliminaProdotto(string codiceProdotto) bool
-        +CercaProdottoPerCodice(string codiceProdotto) Prodotto
-        +OttieniTuttiIProdotti() List~Prodotto~
-    }
-
-    class IGestioneCarrello {
-        <<interface>>
-        +AggiungiAlCarrello(Prodotto prodotto, int quantita) bool
-        +ModificaQuantitaNelCarrello(string codiceProdotto, int nuovaQuantita) bool
-        +RimuoviDalCarrello(string codiceProdotto) bool
-        +SvuotaCarrello()
-        +CalcolaTotale() decimal
-    }
-
-    class IGestioneAcquisti {
-        <<interface>>
-        +RegistraAcquisto(Acquisto acquisto)
-        +OttieniTuttiGliAcquisti() List~Acquisto~
-        +OttieniAcquistiPerUtente(string nomeUtente) List~Acquisto~
-    }
-
-    class Utente {
-        +string Nome
-        +Utente(string nome)
-    }
-
-    class Prodotto {
-        +string CodiceProdotto
-        +string Nome
-        +decimal Prezzo
-        +int QuantitaDisponibile
-        +int QuantitaIniziale
-        +CambiaPrezzo(decimal nuovoPrezzo)
-        +CambiaQuantita(int variazioneQuantita)
-        +CalcolaQuantitaVenduta() int
-    }
-
-    class ElementoCarrello {
-        +Prodotto ProdottoSelezionato
-        +int QuantitaScelta
-        +decimal PrezzoUnitario
-        +CalcolaTotaleParziale() decimal
-        +CambiaQuantitaScelta(int nuovaQuantita)
-    }
-
-    class Acquisto {
-        +Utente Utente
-        +string NomeUtente
-        +List~ElementoAcquistato~ ProdottiAcquistati
-        +decimal TotaleOrdine
-        +DateTime DataAcquisto
-    }
-
-    class ElementoAcquistato {
-        +string CodiceProdotto
-        +string NomeProdotto
-        +int QuantitaAcquistata
-        +decimal PrezzoUnitario
-        +decimal TotaleParziale
-    }
-
-    class ServizioNegozio {
-        +AggiungiProdottoAlCarrello(string codiceProdotto, int quantita) bool
-        +ConfermaAcquisto(Utente utente) Acquisto
-        +CreaReportProdotti() List~ReportProdotto~
-        +StampaAcquisto(Acquisto acquisto)
-        +StampaReportProdotti()
-    }
-
-    class ReportProdotto {
-        +string CodiceProdotto
-        +string NomeProdotto
-        +int QuantitaIniziale
-        +int QuantitaVenduta
-        +int QuantitaDisponibile
-    }
+    CatalogoProdotti ..|> IGestioneCatalogo
+    CarrelloUtente ..|> IGestioneCarrello
+    StoricoAcquisti ..|> IGestioneAcquisti
 ```
 
 ## Cosa è già implementato
