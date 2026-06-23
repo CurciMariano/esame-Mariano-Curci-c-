@@ -549,7 +549,13 @@ public class CarrelloUtente : IGestioneCarrello
     {
         // TODO: rimuovere dal carrello l'elemento con il codice indicato.
         // Restituire true se rimosso, false se non trovato.
-        throw new NotImplementedException("Completare il metodo RimuoviDalCarrello.");
+        var elemento = elementiCarrello.FirstOrDefault(e => e.Prodotto.CodiceProdotto.Equals(codiceProdotto, StringComparison.OrdinalIgnoreCase));
+        if (elemento != null)
+        {
+            elementiCarrello.Remove(elemento);
+            return true;
+        }
+        return false;
     }
 
     public void SvuotaCarrello()
