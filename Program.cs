@@ -801,7 +801,6 @@ public class ServizioNegozio
             throw new InvalidOperationException("Il carrello è vuoto. Non è possibile confermare l'acquisto.");
         }
 
-        // 1. Ricontrolliamo la disponibilità in magazzino per sicurezza
         foreach (var elemento in elementi)
         {
             if (elemento.QuantitaScelta > elemento.ProdottoSelezionato.QuantitaDisponibile)
@@ -810,7 +809,6 @@ public class ServizioNegozio
             }
         }
 
-        // 2. Creiamo gli ElementoAcquistato partendo dal carrello
         List<ElementoAcquistato> prodottiAcquistati = new List<ElementoAcquistato>();
         foreach (var elemento in elementi)
         {
@@ -821,15 +819,13 @@ public class ServizioNegozio
                 elemento.PrezzoUnitario
             ));
 
-            // 3. Diminuiamo la quantità disponibile in magazzino
             elemento.ProdottoSelezionato.CambiaQuantita(-elemento.QuantitaScelta);
         }
 
-        // 4. Creiamo e registriamo l'acquisto
+
         Acquisto nuovoAcquisto = new Acquisto(utente, prodottiAcquistati);
         storicoAcquisti.RegistraAcquisto(nuovoAcquisto);
 
-        // 5. Svuotiamo il carrello
         carrelloUtente.SvuotaCarrello();
 
         return nuovoAcquisto;
