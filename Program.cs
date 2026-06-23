@@ -91,7 +91,7 @@ public class ApplicazioneNegozio
         return Console.ReadLine()?.Trim().ToLower() ?? string.Empty;
     }
 
-    private void GestisciMenuUtente(string? scelta)
+    private void GestisciMenuUtente(string? sceltaIniziale)
     {
         // TODO: implementare il menu utente.
         // Operazioni richieste dalla traccia:
@@ -103,73 +103,115 @@ public class ApplicazioneNegozio
         // - svuotare carrello;
         // - confermare acquisto;
         // - visualizzare storico acquisti dell'utente.
-        Console.WriteLine("Benvenuto nel menu utente!");
-        Console.WriteLine("Operazioni disponibili:");
-        Console.WriteLine("1. Visualizza catalogo");
-        Console.WriteLine("2. Aggiungi prodotto al carrello");
-        Console.WriteLine("3. Visualizza carrello");
-        Console.WriteLine("4. Modifica quantità nel carrello");
-        Console.WriteLine("5. Rimuovi prodotto dal carrello");
-        Console.WriteLine("6. Svuota carrello");
-        Console.WriteLine("7. Conferma acquisto");
-        Console.WriteLine("8. Visualizza storico acquisti");
-        Console.WriteLine("9. Esci");
-        switch (scelta)
+        bool continua = true;
+        string? scelta = sceltaIniziale;
+
+        while (continua)
         {
-            case "1":
-                MostraCatalogo();
-                break;
-            case "2":
-                Console.Write("Inserisci il codice prodotto: ");
-                string codice = Console.ReadLine();
-                Prodotto prodottoScelto = catalogoProdotti.CercaProdotto(codice);
-                Console.Write("Inserisci la quantità: ");
-                int.TryParse(Console.ReadLine(), out int qta);
-                if (prodottoScelto != null)
-                {
-                    carrelloUtente.AggiungiAlCarrello(prodottoScelto, qta);
-                }
-                else
-                {
-                    Console.WriteLine("Prodotto non trovato.");
-                }
-                break;
-            case "3":
-                MostraCarrello();
-                break;
-            case "4":
-                Console.Write("Inserisci il codice del prodotto da modificare: ");
-                string codModifica = Console.ReadLine();
-                Console.Write("Inserisci la nuova quantità: ");
-                int.TryParse(Console.ReadLine(), out int nuovaQta);
+            Console.WriteLine("Benvenuto nel menu utente!");
+            Console.WriteLine("Operazioni disponibili:");
+            Console.WriteLine("1. Visualizza catalogo");
+            Console.WriteLine("2. Aggiungi prodotto al carrello");
+            Console.WriteLine("3. Visualizza carrello");
+            Console.WriteLine("4. Modifica quantità nel carrello");
+            Console.WriteLine("5. Rimuovi prodotto dal carrello");
+            Console.WriteLine("6. Svuota carrello");
+            Console.WriteLine("7. Conferma acquisto");
+            Console.WriteLine("8. Visualizza storico acquisti");
+            Console.WriteLine("9. Esci");
+            if (scelta == null)
+            {
+                Console.Write("Seleziona un'opzione: ");
+                scelta = Console.ReadLine()?.Trim();
+            }
 
-                // Passi i dati tra le parentesi
-                carrelloUtente.ModificaQuantitaNelCarrello(codModifica, nuovaQta);
-                break;
-            case "5":
-                Console.Write("Inserisci il codice del prodotto da rimuovere: ");
-                string codRimozione = Console.ReadLine();
-
-                // Aggiungi carrelloUtente. e passa la variabile
-                carrelloUtente.RimuoviDalCarrello(codRimozione);
-                break;
-            case "6":
-                carrelloUtente.SvuotaCarrello();
-                Console.WriteLine("Carrello svuotato.");
-                break;
-            case "7":
-                ConfermaAcquisto();
-                break;
-            case "8":
-                MostraStoricoUtente();
+            switch (scelta)
+            {
+                case "1":
+                    MostraCatalogo();
                     break;
-            case "9":
-                Console.WriteLine("Uscita dal menu utente.");
-                return;
-            default:
-                Console.WriteLine("Scelta non valida. Riprova.");
-                break;
+                case "2":
+                    Console.Write("Inserisci il codice prodotto: ");
+                    string? codice = Console.ReadLine();
+                    Console.Write("Inserisci la quantità: ");
+                    int.TryParse(Console.ReadLine(), out int qta);
 
+                    // Utilizziamo il metodo del servizio preposto delegando la logica
+                    bool aggiunto = servizioNegozio.AggiungiProdottoAlCarrello(codice ?? string.Empty, qta);
+                    if (aggiunto)
+                        Console.WriteLine("Prodotto aggiunto al carrello.");
+                    else
+                        Console.WriteLine("Impossibile aggiungere il prodotto (codice errato o quantità insufficiente).");
+                    break;
+                case "3":
+                    MostraCarrello();
+                    break;
+                case "4":
+                    Console.Write("Inserisci il codice del prodotto da modificare: ");
+                    string? codModifica = Console.ReadLine();
+                    Console.Write("Inserisci la nuova quantità: ");
+                    int.TryParse(Console.ReadLine(), out int nuovaQta);
+
+                    bool modificato = carrelloUtente.ModificaQuantitaNelCarrello(codModifica ?? string.Empty, nuovaQta);
+                    if (modificato)
+                        Console.WriteLine("Quantità modificata con successo.");
+                    else
+                        Console.WriteLine("Impossibile modificare la quantità.");
+                    break;
+                case "5":
+                    Console.Write("Inserisci il codice del prodotto da rimuovere: ");
+                    string? codRimozione = Console.ReadLine();
+
+                    bool rimosso = carrelloUtente.RimuoviDalCarrello(codRimozione ?? string.Empty);
+                    if (rimosso)
+                        Console.WriteLine("Prodotto rimosso dal carrello.");
+                    else
+                        Console.WriteLine("Prodotto non trovato nel carrello.");
+                    break;
+                case "6":
+                    carrelloUtente.SvuotaCarrello();
+                    Console.WriteLine("Carrello svuotato.");
+                    break;
+                case "7":
+                    // Chiediamo il nome utente per legarlo all'acquisto
+                    Console.Write("Inserisci il tuo nome utente per confermare l'ordine: ");
+                    string? nomeFatturazione = Console.ReadLine();
+                    if (!string.IsNullOrWhiteSpace(nomeFatturazione))
+                    {
+                        try
+                        {
+                            Utente u = new Utente(nomeFatturazione);
+                            Acquisto a = servizioNegozio.ConfermaAcquisto(u);
+                            Console.WriteLine("Acquisto confermato con successo!");
+                            servizioNegozio.StampaAcquisto(a);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Errore: {ex.Message}");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Nome utente non valido.");
+                    }
+                    break;
+                case "8":
+                    MostraStoricoUtente();
+                    break;
+                case "9":
+                    Console.WriteLine("Uscita dal menu utente.");
+                    continua = false;
+                    break;
+                default:
+                    Console.WriteLine("Scelta non valida. Riprova.");
+                    break;
+            }
+
+            // Resettiamo scelta per il prossimo giro del ciclo while
+            if (continua)
+            {
+                scelta = null;
+            }
         }
 
     }
@@ -466,7 +508,11 @@ public class ElementoCarrello
         // TODO: validare che la nuova quantità sia maggiore di zero.
         // Se è valida, aggiornare QuantitaScelta.
         // Se non è valida, lanciare ArgumentException con un messaggio comprensibile.
-        throw new NotImplementedException("Completare il metodo CambiaQuantitaScelta.");
+        if (nuovaQuantita <= 0)
+        {
+            throw new ArgumentException("La quantità deve essere maggiore di zero.");
+        }
+        QuantitaScelta = nuovaQuantita;
     }
 }
 
@@ -541,7 +587,13 @@ public class CatalogoProdotti : IGestioneCatalogo
     {
         // TODO: cercare il prodotto tramite codice e rimuoverlo dalla lista.
         // Restituire true se il prodotto è stato eliminato, false se non esiste.
-        throw new NotImplementedException("Completare il metodo EliminaProdotto.");
+        var prodotto = prodotti.FirstOrDefault(p => p.CodiceProdotto.Equals(codiceProdotto, StringComparison.OrdinalIgnoreCase));
+        if (prodotto != null)
+        {
+            prodotti.Remove(prodotto);
+            return true;
+        }
+        return false;
     }
 
     public Prodotto? CercaProdottoPerCodice(string codiceProdotto)
@@ -561,14 +613,26 @@ public class CatalogoProdotti : IGestioneCatalogo
     {
         // TODO: trovare il prodotto e chiamare prodotto.CambiaPrezzo(nuovoPrezzo).
         // Restituire false se il codice non esiste.
-        throw new NotImplementedException("Completare il metodo ModificaPrezzoProdotto.");
+        var prodotto = prodotti.FirstOrDefault(p => p.CodiceProdotto.Equals(codiceProdotto, StringComparison.OrdinalIgnoreCase));
+        if (prodotto != null)
+        {
+            prodotto.CambiaPrezzo(nuovoPrezzo);
+            return true;
+        }
+        return false;
     }
 
     public bool ModificaQuantitaProdotto(string codiceProdotto, int variazioneQuantita)
     {
         // TODO: trovare il prodotto e chiamare prodotto.CambiaQuantita(variazioneQuantita).
         // La variazione può essere positiva o negativa, ma il magazzino non deve scendere sotto zero.
-        throw new NotImplementedException("Completare il metodo ModificaQuantitaProdotto.");
+        var prodotto = prodotti.FirstOrDefault(p => p.CodiceProdotto.Equals(codiceProdotto, StringComparison.OrdinalIgnoreCase));
+        if (prodotto != null)
+        {
+            prodotto.CambiaQuantita(variazioneQuantita);
+            return true;
+        }
+        return false;
     }
 }
 
@@ -731,7 +795,12 @@ public class ServizioNegozio
         // - registrare l'acquisto nello storico;
         // - svuotare il carrello dopo un acquisto completato;
         // - creare e restituire un Acquisto associato all'Utente ricevuto.
-        throw new NotImplementedException("Completare il metodo ConfermaAcquisto.");
+        if (carrelloUtente.OttieniElementi().Count == 0)
+        {
+            throw new InvalidOperationException("Il carrello è vuoto. Non è possibile confermare l'acquisto.");
+        }
+
+
     }
 
     public List<ReportProdotto> CreaReportProdotti()
