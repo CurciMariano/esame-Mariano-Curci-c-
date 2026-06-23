@@ -529,7 +529,20 @@ public class CarrelloUtente : IGestioneCarrello
         // Regole:
         // - nuovaQuantita deve essere > 0;
         // - nuovaQuantita non deve superare la disponibilità del prodotto.
-        throw new NotImplementedException("Completare il metodo ModificaQuantitaNelCarrello.");
+       switch (nuovaQuantita)
+        {
+            case <= 0:
+                return false;
+            default:
+                var elemento = elementiCarrello.FirstOrDefault(e => e.Prodotto.CodiceProdotto.Equals(codiceProdotto, StringComparison.OrdinalIgnoreCase));
+                if (elemento == null || nuovaQuantita > elemento.Prodotto.QuantitaDisponibile)
+                {
+                    return false;
+                }
+                elemento.CambiaQuantitaScelta(nuovaQuantita);
+                return true;
+        }
+
     }
 
     public bool RimuoviDalCarrello(string codiceProdotto)
