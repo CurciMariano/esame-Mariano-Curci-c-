@@ -50,7 +50,9 @@ public class ApplicazioneNegozio
         // 2. chiedere se l'utente vuole entrare come "utente" o "amministratore";
         // 3. chiamare GestisciMenuUtente oppure GestisciMenuAmministratore;
         // 4. permettere l'uscita dal programma con una scelta dedicata.
-        throw new NotImplementedException("Completare il metodo Avvia.");
+        Console.WriteLine("Benvenuto nel Negozio Online!");
+        Console.WriteLine("Scegli il tuo ruolo: 'utente' , 'amministratore' o 'esci' per terminare la sessione.");
+        string ruolo = ScegliRuolo();
     }
 
     private void CaricaDatiIniziali()
@@ -67,7 +69,7 @@ public class ApplicazioneNegozio
         // TODO: leggere da console il ruolo scelto.
         // Valori consigliati: "utente", "amministratore", "esci".
         // Gestire input vuoti e maiuscole/minuscole con Trim() e ToLower().
-        throw new NotImplementedException("Completare il metodo ScegliRuolo.");
+
     }
 
     private void GestisciMenuUtente()
