@@ -754,7 +754,7 @@ public class StoricoAcquisti : IGestioneAcquisti
     {
         // TODO: filtrare gli acquisti per nome utente.
         // Consiglio: usare StringComparison.OrdinalIgnoreCase per ignorare maiuscole/minuscole.
-        throw new NotImplementedException("Completare il metodo OttieniAcquistiPerUtente.");
+        return acquisti.Where(a => a.NomeUtente.Equals(nomeUtente, StringComparison.OrdinalIgnoreCase)).ToList();
     }
 }
 
@@ -795,11 +795,44 @@ public class ServizioNegozio
         // - registrare l'acquisto nello storico;
         // - svuotare il carrello dopo un acquisto completato;
         // - creare e restituire un Acquisto associato all'Utente ricevuto.
-        if (carrelloUtente.OttieniElementi().Count == 0)
+        var elementi = carrelloUtente.OttieniElementi();
+        if (elementi.Count == 0)
         {
             throw new InvalidOperationException("Il carrello è vuoto. Non è possibile confermare l'acquisto.");
         }
 
+        // 1. Ricontrolliamo la disponibilità in magazzino per sicurezza
+        foreach (var elemento in elementi)
+        {
+            if (elemento.QuantitaScelta > elemento.ProdottoSelezionato.QuantitaDisponibile)
+            {
+                throw new InvalidOperationException($"Quantità insufficiente in magazzino per il prodotto: {elemento.ProdottoSelezionato.Nome}");
+            }
+        }
+
+        // 2. Creiamo gli ElementoAcquistato partendo dal carrello
+        List<ElementoAcquistato> prodottiAcquistati = new List<ElementoAcquistato>();
+        foreach (var elemento in elementi)
+        {
+            prodottiAcquistati.Add(new ElementoAcquistato(
+                elemento.ProdottoSelezionato.CodiceProdotto,
+                elemento.ProdottoSelezionato.Nome,
+                elemento.QuantitaScelta,
+                elemento.PrezzoUnitario
+            ));
+
+            // 3. Diminuiamo la quantità disponibile in magazzino
+            elemento.ProdottoSelezionato.CambiaQuantita(-elemento.QuantitaScelta);
+        }
+
+        // 4. Creiamo e registriamo l'acquisto
+        Acquisto nuovoAcquisto = new Acquisto(utente, prodottiAcquistati);
+        storicoAcquisti.RegistraAcquisto(nuovoAcquisto);
+
+        // 5. Svuotiamo il carrello
+        carrelloUtente.SvuotaCarrello();
+
+        return nuovoAcquisto;
 
     }
 
