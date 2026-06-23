@@ -55,7 +55,7 @@ public class ApplicazioneNegozio
         string ruolo = ScegliRuolo();
         if (ruolo == "utente")
         {
-            GestisciMenuUtente();
+            GestisciMenuUtente(Console.ReadLine());
         }
         else if (ruolo == "amministratore")
         {
@@ -91,7 +91,7 @@ public class ApplicazioneNegozio
         return Console.ReadLine()?.Trim().ToLower() ?? string.Empty;
     }
 
-    private void GestisciMenuUtente()
+    private void GestisciMenuUtente(string? scelta)
     {
         // TODO: implementare il menu utente.
         // Operazioni richieste dalla traccia:
@@ -114,25 +114,44 @@ public class ApplicazioneNegozio
         Console.WriteLine("7. Conferma acquisto");
         Console.WriteLine("8. Visualizza storico acquisti");
         Console.WriteLine("9. Esci");
-        
-        string scelta = Console.ReadLine();
-
         switch (scelta)
         {
             case "1":
                 MostraCatalogo();
                 break;
             case "2":
-                AggiungiAlCarrello();
+                Console.Write("Inserisci il codice prodotto: ");
+                string codice = Console.ReadLine();
+                Prodotto prodottoScelto = catalogoProdotti.CercaProdotto(codice);
+                Console.Write("Inserisci la quantità: ");
+                int.TryParse(Console.ReadLine(), out int qta);
+                if (prodottoScelto != null)
+                {
+                    carrelloUtente.AggiungiAlCarrello(prodottoScelto, qta);
+                }
+                else
+                {
+                    Console.WriteLine("Prodotto non trovato.");
+                }
                 break;
             case "3":
                 MostraCarrello();
                 break;
             case "4":
-                ModificaQuantitaNelCarrello();
+                Console.Write("Inserisci il codice del prodotto da modificare: ");
+                string codModifica = Console.ReadLine();
+                Console.Write("Inserisci la nuova quantità: ");
+                int.TryParse(Console.ReadLine(), out int nuovaQta);
+
+                // Passi i dati tra le parentesi
+                carrelloUtente.ModificaQuantitaNelCarrello(codModifica, nuovaQta);
                 break;
             case "5":
-                RimuoviDalCarrello();
+                Console.Write("Inserisci il codice del prodotto da rimuovere: ");
+                string codRimozione = Console.ReadLine();
+
+                // Aggiungi carrelloUtente. e passa la variabile
+                carrelloUtente.RimuoviDalCarrello(codRimozione);
                 break;
             case "6":
                 carrelloUtente.SvuotaCarrello();
@@ -143,16 +162,16 @@ public class ApplicazioneNegozio
                 break;
             case "8":
                 MostraStoricoUtente();
-                break;
+                    break;
             case "9":
                 Console.WriteLine("Uscita dal menu utente.");
                 return;
             default:
                 Console.WriteLine("Scelta non valida. Riprova.");
                 break;
-            
+
         }
-        
+
     }
 
     private void GestisciMenuAmministratore()
@@ -166,7 +185,76 @@ public class ApplicazioneNegozio
         // - aumentare o diminuire quantità disponibile;
         // - visualizzare tutti gli acquisti;
         // - visualizzare quantità iniziale, venduta e disponibile per prodotto.
-        throw new NotImplementedException("Completare il metodo GestisciMenuAmministratore.");
+        Console.WriteLine("Benvenuto nel menu amministratore!");
+        Console.WriteLine("Operazioni disponibili:");
+        Console.WriteLine("1. Visualizza catalogo completo");
+        Console.WriteLine("2. Aggiungi prodotto");
+        Console.WriteLine("3. Elimina prodotto");
+        Console.WriteLine("4. Modifica prezzo");
+        Console.WriteLine("5. Modifica quantità disponibile");
+        Console.WriteLine("6. Visualizza tutti gli acquisti");
+        Console.WriteLine("7. Visualizza report prodotti");
+        Console.WriteLine("8. Esci");
+        string scelta = Console.ReadLine()?.Trim() ?? string.Empty;
+        switch (scelta)
+        {
+            case "1":
+                MostraCatalogo();
+                break;
+            case "2":
+                Console.Write("Inserisci codice prodotto: ");
+                string codice = Console.ReadLine();
+                Console.Write("Inserisci nome prodotto: ");
+                string nome = Console.ReadLine();
+                Console.Write("Inserisci prezzo: ");
+                decimal.TryParse(Console.ReadLine(), out decimal prezzo);
+                Console.Write("Inserisci quantità disponibile: ");
+                int.TryParse(Console.ReadLine(), out int qta);
+                catalogoProdotti.AggiungiProdotto(new Prodotto(codice, nome, prezzo, qta));
+                break;
+            case "3":
+                Console.Write("Inserisci codice prodotto da eliminare: ");
+                string codElimina = Console.ReadLine();
+                catalogoProdotti.EliminaProdotto(codElimina);
+                break;
+            case "4":
+                Console.Write("Inserisci codice prodotto da modificare: ");
+                string codModifica = Console.ReadLine();
+                Console.Write("Inserisci nuovo prezzo: ");
+                decimal.TryParse(Console.ReadLine(), out decimal nuovoPrezzo);
+                catalogoProdotti.ModificaPrezzoProdotto(codModifica, nuovoPrezzo);
+                break;
+            case "5":
+                Console.Write("Inserisci codice prodotto da modificare: ");
+                string codModificaQta = Console.ReadLine();
+                Console.Write("Inserisci variazione quantità (es. 5 o -3): ");
+                int.TryParse(Console.ReadLine(), out int variazioneQta);
+                catalogoProdotti.ModificaQuantitaProdotto(codModificaQta, variazioneQta);
+                break;
+            case "6":
+                List<Acquisto> acquisti = storicoAcquisti.OttieniTuttiGliAcquisti();
+                if (acquisti.Count == 0)
+                {
+                    Console.WriteLine("Nessun acquisto registrato.");
+                }
+                else
+                {
+                    foreach (Acquisto acquisto in acquisti)
+                    {
+                        servizioNegozio.StampaAcquisto(acquisto);
+                    }
+                }
+                break;
+            case "7":
+                servizioNegozio.StampaReportProdotti();
+                break;
+            case "8":
+                Console.WriteLine("Uscita dal menu amministratore.");
+                return;
+            default:
+                Console.WriteLine("Scelta non valida. Riprova.");
+                break;
+        }
     }
 
     private void MostraCatalogo()
@@ -501,19 +589,19 @@ public class CarrelloUtente : IGestioneCarrello
         // - rifiutare quantità maggiore della disponibilità di magazzino;
         // - se il prodotto è già presente, aumentare la quantità esistente;
         // - controllare che quantità esistente + quantità richiesta non superi il magazzino.
-        if(quantita <= 0 || quantita > prodotto.QuantitaDisponibile)
+        if (quantita <= 0 || quantita > prodotto.QuantitaDisponibile)
         {
             return false;
         }
 
-        var elementoEsistente = elementiCarrello.FirstOrDefault(e => e.Prodotto.CodiceProdotto.Equals(prodotto.CodiceProdotto, StringComparison.OrdinalIgnoreCase));
+        var elementoEsistente = elementiCarrello.FirstOrDefault(e => e.ProdottoSelezionato.CodiceProdotto.Equals(prodotto.CodiceProdotto, StringComparison.OrdinalIgnoreCase));
         if (elementoEsistente != null)
         {
-            if (elementoEsistente.Quantita + quantita > prodotto.QuantitaDisponibile)
+            if (elementoEsistente.QuantitaScelta + quantita > prodotto.QuantitaDisponibile)
             {
                 return false;
             }
-            elementoEsistente.Quantita += quantita;
+            elementoEsistente.CambiaQuantitaScelta(elementoEsistente.QuantitaScelta + quantita);
         }
         else
         {
@@ -529,27 +617,27 @@ public class CarrelloUtente : IGestioneCarrello
         // Regole:
         // - nuovaQuantita deve essere > 0;
         // - nuovaQuantita non deve superare la disponibilità del prodotto.
-       switch (nuovaQuantita)
+        if (nuovaQuantita <= 0)
         {
-            case <= 0:
-                return false;
-            default:
-                var elemento = elementiCarrello.FirstOrDefault(e => e.Prodotto.CodiceProdotto.Equals(codiceProdotto, StringComparison.OrdinalIgnoreCase));
-                if (elemento == null || nuovaQuantita > elemento.Prodotto.QuantitaDisponibile)
-                {
-                    return false;
-                }
-                elemento.CambiaQuantitaScelta(nuovaQuantita);
-                return true;
+            return false;
         }
 
+        var elemento = elementiCarrello.FirstOrDefault(e =>
+            e.ProdottoSelezionato.CodiceProdotto.Equals(codiceProdotto, StringComparison.OrdinalIgnoreCase));
+        if (elemento == null || nuovaQuantita > elemento.ProdottoSelezionato.QuantitaDisponibile)
+        {
+            return false;
+        }
+        elemento.CambiaQuantitaScelta(nuovaQuantita);
+        return true;
     }
 
     public bool RimuoviDalCarrello(string codiceProdotto)
     {
         // TODO: rimuovere dal carrello l'elemento con il codice indicato.
         // Restituire true se rimosso, false se non trovato.
-        var elemento = elementiCarrello.FirstOrDefault(e => e.Prodotto.CodiceProdotto.Equals(codiceProdotto, StringComparison.OrdinalIgnoreCase));
+        var elemento = elementiCarrello.FirstOrDefault(e =>
+            e.ProdottoSelezionato.CodiceProdotto.Equals(codiceProdotto, StringComparison.OrdinalIgnoreCase));
         if (elemento != null)
         {
             elementiCarrello.Remove(elemento);
@@ -623,7 +711,13 @@ public class ServizioNegozio
     {
         // TODO: cercare il prodotto nel catalogo e delegare a carrelloUtente.AggiungiAlCarrello.
         // Restituire false se il prodotto non esiste o se la quantità non è valida.
-        throw new NotImplementedException("Completare il metodo AggiungiProdottoAlCarrello.");
+        switch (catalogoProdotti.CercaProdottoPerCodice(codiceProdotto))
+        {
+            case null:
+                return false;
+            default:
+                return carrelloUtente.AggiungiAlCarrello(catalogoProdotti.CercaProdottoPerCodice(codiceProdotto), quantita);
+        }
     }
 
     public Acquisto ConfermaAcquisto(Utente utente)
