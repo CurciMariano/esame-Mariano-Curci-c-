@@ -20,8 +20,8 @@ public class Program
     {
         // Punto di ingresso della Console App.
         ApplicazioneNegozio applicazione = new ApplicazioneNegozio();
-        // applicazione.Avvia();
-        TestNegozioOnline.EseguiTuttiITest();
+        applicazione.Avvia();
+        //TestNegozioOnline.EseguiTuttiITest();
     }
 }
 
@@ -245,33 +245,83 @@ public class ApplicazioneNegozio
                 break;
             case "2":
                 Console.Write("Inserisci codice prodotto: ");
-                string codice = Console.ReadLine();
+                string codice = Console.ReadLine()?.Trim() ?? string.Empty;
                 Console.Write("Inserisci nome prodotto: ");
-                string nome = Console.ReadLine();
+                string nome = Console.ReadLine()?.Trim() ?? string.Empty;
+                
                 Console.Write("Inserisci prezzo: ");
                 decimal.TryParse(Console.ReadLine(), out decimal prezzo);
                 Console.Write("Inserisci quantità disponibile: ");
                 int.TryParse(Console.ReadLine(), out int qta);
-                catalogoProdotti.AggiungiProdotto(new Prodotto(codice, nome, prezzo, qta));
+                
+                // Effettuiamo il controllo prima di istanziare l'oggetto
+                if (!string.IsNullOrEmpty(codice) && !string.IsNullOrEmpty(nome))
+                {
+                    try 
+                    {
+                        catalogoProdotti.AggiungiProdotto(new Prodotto(codice, nome, prezzo, qta));
+                        Console.WriteLine("Prodotto aggiunto con successo al catalogo.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Errore: {ex.Message}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Errore: Codice e Nome prodotto non possono essere vuoti.");
+                }
                 break;
             case "3":
                 Console.Write("Inserisci codice prodotto da eliminare: ");
-                string codElimina = Console.ReadLine();
-                catalogoProdotti.EliminaProdotto(codElimina);
+                string codElimina = Console.ReadLine()?.Trim() ?? string.Empty;
+                
+                if (!string.IsNullOrEmpty(codElimina))
+                {
+                    bool eliminato = catalogoProdotti.EliminaProdotto(codElimina);
+                    if (eliminato) Console.WriteLine("Prodotto eliminato.");
+                    else Console.WriteLine("Prodotto non trovato.");
+                }
                 break;
             case "4":
                 Console.Write("Inserisci codice prodotto da modificare: ");
-                string codModifica = Console.ReadLine();
+                string codModifica = Console.ReadLine()?.Trim() ?? string.Empty;
                 Console.Write("Inserisci nuovo prezzo: ");
                 decimal.TryParse(Console.ReadLine(), out decimal nuovoPrezzo);
-                catalogoProdotti.ModificaPrezzoProdotto(codModifica, nuovoPrezzo);
+                
+                if (!string.IsNullOrEmpty(codModifica))
+                {
+                    try 
+                    {
+                        bool modificato = catalogoProdotti.ModificaPrezzoProdotto(codModifica, nuovoPrezzo);
+                        if (modificato) Console.WriteLine("Prezzo aggiornato.");
+                        else Console.WriteLine("Prodotto non trovato.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Errore: {ex.Message}");
+                    }
+                }
                 break;
             case "5":
                 Console.Write("Inserisci codice prodotto da modificare: ");
-                string codModificaQta = Console.ReadLine();
+                string codModificaQta = Console.ReadLine()?.Trim() ?? string.Empty;
                 Console.Write("Inserisci variazione quantità (es. 5 o -3): ");
                 int.TryParse(Console.ReadLine(), out int variazioneQta);
-                catalogoProdotti.ModificaQuantitaProdotto(codModificaQta, variazioneQta);
+                
+                if (!string.IsNullOrEmpty(codModificaQta))
+                {
+                    try 
+                    {
+                        bool modificato = catalogoProdotti.ModificaQuantitaProdotto(codModificaQta, variazioneQta);
+                        if (modificato) Console.WriteLine("Magazzino aggiornato.");
+                        else Console.WriteLine("Prodotto non trovato.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Errore: {ex.Message}");
+                    }
+                }
                 break;
             case "6":
                 List<Acquisto> acquisti = storicoAcquisti.OttieniTuttiGliAcquisti();
